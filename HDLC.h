@@ -34,7 +34,8 @@ private:
     enum {
         ESCAPED   = -1,
         RECEIVING = 0,
-        OK        = 1
+        OK        = 1,
+        CRCERR    = 2
     };
 
     int8_t status;

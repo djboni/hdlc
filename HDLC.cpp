@@ -98,10 +98,15 @@ uint16_t HDLC::receive()
     {
         if(status == RECEIVING && len != 0U)
         {
-            // TODO CRC
-            status = OK;
-
-            retv = len;
+            if(crc == CRC_GOOD)
+            {
+                status = OK;
+                retv = len;
+            }
+            else
+            {
+                status = CRCERR;
+            }
         }
         else
         {
