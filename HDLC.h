@@ -31,7 +31,13 @@ public:
     uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
 
 private:
-    uint8_t stat;
+    enum {
+        ESCAPED   = -1,
+        RECEIVING = 0,
+        OK        = 1
+    };
+
+    int8_t status;
     uint16_t len;
     uint16_t crc;
     uint8_t data[RXBFLEN];

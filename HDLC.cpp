@@ -57,7 +57,7 @@ HDLC::HDLC()
 void HDLC::init()
 {
     len = 0U;
-    stat = 0U;
+    status = RECEIVING;
     crc = CRC_INIT;
 }
 
