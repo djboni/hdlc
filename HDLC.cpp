@@ -81,3 +81,12 @@ void HDLC::transmit(const void* vdata, uint16_t len) const
 
     writeByte('~');
 }
+
+uint16_t HDLC::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
+{
+    memcpy(buff, data, len);
+
+    const uint16_t datalen = len;
+    init();
+    return datalen;
+}

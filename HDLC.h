@@ -28,7 +28,7 @@ public:
     void init();
     void transmit(const void* vdata, uint16_t len) const;
     uint16_t receive();
-    void copyReceivedMessage(uint8_t rxbf[RXBFLEN]);
+    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
 
 private:
     uint8_t stat;
