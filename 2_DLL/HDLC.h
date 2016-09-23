@@ -38,6 +38,8 @@ public:
 
     uint16_t receive();
     uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
+    uint16_t copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
+            bool callinit=false);
 
 private:
     enum {
