@@ -15,9 +15,15 @@
  */
 
 #include "HDLC.h"
-#include "Arduinutil.h"
-#include <util/crc16.h>
 #include <string.h>
+
+#include <util/crc16.h>
+#define CRC_INIT              0xFFFFU
+#define CRC_FINALXOR          0xFFFFU
+#define CRC_GOOD              0xF0B8U
+#define crc_update(crc, data) _crc_ccitt_update(crc, data)
+
+#include "Arduinutil.h"
 
 static int16_t readByte(void)
 {
@@ -29,11 +35,6 @@ static void writeByte(uint8_t data)
 {
     Serial1_writeByte(data);
 }
-
-#define CRC_INIT              0xFFFFU
-#define CRC_FINALXOR          0xFFFFU
-#define CRC_GOOD              0xF0B8U
-#define crc_update(crc, data) _crc_ccitt_update(crc, data)
 
 static void escapeAndWriteByte(uint8_t data)
 {
