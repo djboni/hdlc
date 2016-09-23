@@ -65,20 +65,33 @@ void HDLC::init()
 void HDLC::transmitBlock(const void* vdata, uint16_t len)
 {
     const uint8_t* data = (const uint8_t*)vdata;
-    uint16_t crc = CRC_INIT;
-
-    writeByte('~');
-
-    while(len--)
+    transmitStart();
+    while(len)
     {
-        escapeAndWriteByte(*data);
-        crc = crc_update(crc, *data);
+        transmitByte(*data);
         ++data;
+        --len;
     }
+    transmitEnd();
+}
 
-    crc ^= CRC_FINALXOR;
-    escapeAndWriteByte(crc & 0xFFU);
-    escapeAndWriteByte((crc >> 8U) & 0xFFU);
+void HDLC::transmitStart()
+{
+    writeByte('~');
+    txcrc = CRC_INIT;
+}
+
+void HDLC::transmitByte(uint8_t data)
+{
+    escapeAndWriteByte(data);
+    txcrc = crc_update(txcrc, data);
+}
+
+void HDLC::transmitEnd()
+{
+    txcrc ^= CRC_FINALXOR;
+    escapeAndWriteByte(txcrc & 0xFFU);
+    escapeAndWriteByte((txcrc >> 8U) & 0xFFU);
 
     writeByte('~');
 }

@@ -26,7 +26,12 @@ public:
 
     HDLC();
     void init();
+
     void transmitBlock(const void* vdata, uint16_t len);
+    void transmitStart();
+    void transmitByte(uint8_t data);
+    void transmitEnd();
+
     uint16_t receive();
     uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
 
@@ -37,6 +42,8 @@ private:
         OK        = 1,
         CRCERR    = 2
     };
+
+    uint16_t txcrc;
 
     int8_t status;
     uint16_t len;
