@@ -49,9 +49,16 @@ static void transmitByte(uint8_t data)
     }
 }
 
-HDLC::HDLC():
-    stat(0), len(0), crc(0)
+HDLC::HDLC()
 {
+    init();
+}
+
+void HDLC::init()
+{
+    len = 0U;
+    stat = 0U;
+    crc = CRC_INIT;
 }
 
 void HDLC::transmit(const void* vdata, uint16_t len) const

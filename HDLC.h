@@ -25,6 +25,7 @@ public:
     static const uint16_t RXBFLEN = 129U;
 
     HDLC();
+    void init();
     void transmit(const void* vdata, uint16_t len) const;
     uint16_t receive();
     void copyReceivedMessage(uint8_t rxbf[RXBFLEN]);
