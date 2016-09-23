@@ -29,6 +29,11 @@ static void writeByte(uint8_t data)
     Serial1_writeByte(data);
 }
 
+#define CRC_INIT              0xFFFFU
+#define CRC_FINALXOR          0xFFFFU
+#define CRC_GOOD              0xF0B8U
+#define crc_update(crc, data) _crc_ccitt_update(crc, data)
+
 static void transmitByte(uint8_t data)
 {
     if(     data == '~' ||
@@ -52,18 +57,18 @@ HDLC::HDLC():
 void HDLC::transmit(const void* vdata, uint16_t len) const
 {
     const uint8_t* data = (const uint8_t*)vdata;
-    uint16_t crc = 0xFFFFU;
+    uint16_t crc = CRC_INIT;
 
     writeByte('~');
 
     while(len--)
     {
         transmitByte(*data);
-        crc = _crc_ccitt_update(crc, *data);
+        crc = crc_update(crc, *data);
         ++data;
     }
 
-    crc ^= 0xFFFFU;
+    crc ^= CRC_FINALXOR;
     transmitByte(crc & 0xFFU);
     transmitByte((crc >> 8U) & 0xFFU);
 
