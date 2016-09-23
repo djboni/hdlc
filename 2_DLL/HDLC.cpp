@@ -115,6 +115,7 @@ uint16_t HDLC::receive()
             if(crc == CRC_GOOD)
             {
                 status = OK;
+                len -= 2U;
                 retv = len;
             }
             else
