@@ -17,12 +17,16 @@
 #ifndef HDLC_H_
 #define HDLC_H_
 
+#ifndef HDLC_RXBFLEN
+#define HDLC_RXBFLEN 16U
+#endif
+
 #include <stdint.h>
 
 class HDLC
 {
 public:
-    static const uint16_t RXBFLEN = 129U;
+    static const uint16_t RXBFLEN = HDLC_RXBFLEN;
 
     HDLC();
     void init();
