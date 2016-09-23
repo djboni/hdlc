@@ -35,7 +35,7 @@ static void writeByte(uint8_t data)
 #define CRC_GOOD              0xF0B8U
 #define crc_update(crc, data) _crc_ccitt_update(crc, data)
 
-static void transmitByte(uint8_t data)
+static void escapeAndWriteByte(uint8_t data)
 {
     if(     data == '~' ||
             data == '}' ||
@@ -62,7 +62,7 @@ void HDLC::init()
     crc = CRC_INIT;
 }
 
-void HDLC::transmit(const void* vdata, uint16_t len) const
+void HDLC::transmitBlock(const void* vdata, uint16_t len)
 {
     const uint8_t* data = (const uint8_t*)vdata;
     uint16_t crc = CRC_INIT;
@@ -71,14 +71,14 @@ void HDLC::transmit(const void* vdata, uint16_t len) const
 
     while(len--)
     {
-        transmitByte(*data);
+        escapeAndWriteByte(*data);
         crc = crc_update(crc, *data);
         ++data;
     }
 
     crc ^= CRC_FINALXOR;
-    transmitByte(crc & 0xFFU);
-    transmitByte((crc >> 8U) & 0xFFU);
+    escapeAndWriteByte(crc & 0xFFU);
+    escapeAndWriteByte((crc >> 8U) & 0xFFU);
 
     writeByte('~');
 }

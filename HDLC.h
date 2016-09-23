@@ -26,7 +26,7 @@ public:
 
     HDLC();
     void init();
-    void transmit(const void* vdata, uint16_t len) const;
+    void transmitBlock(const void* vdata, uint16_t len);
     uint16_t receive();
     uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
 
