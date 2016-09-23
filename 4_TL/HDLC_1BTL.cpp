@@ -27,6 +27,7 @@
 #define DATA    0xC0U
 
 static const uint8_t SEQ_MAX = 62U;
+static const uint8_t NOACK_LIM = 5U;
 
 HDLC_1BTL::HDLC_1BTL()
 {
@@ -81,6 +82,9 @@ void HDLC_1BTL::transmitBlock(const void* vdata, uint16_t len)
 
 void HDLC_1BTL::transmitStart()
 {
+    if(++count_tx_noack >= NOACK_LIM)
+        transmitReset();
+
     HDLC::transmitStart();
     count_seq = (count_seq < SEQ_MAX) ? (count_seq + 1U) : 0U;
     HDLC::transmitByte(DATA | count_seq);
