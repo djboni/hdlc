@@ -66,6 +66,36 @@ void HDLC_1BTL::transmitNack(uint8_t rxs)
     HDLC::transmitEnd();
 }
 
+void HDLC_1BTL::transmitBlock(const void* vdata, uint16_t len)
+{
+    const uint8_t* data = (const uint8_t*)vdata;
+    transmitStart();
+    while(len)
+    {
+        transmitByte(*data);
+        ++data;
+        --len;
+    }
+    transmitEnd();
+}
+
+void HDLC_1BTL::transmitStart()
+{
+    HDLC::transmitStart();
+    count_seq = (count_seq < SEQ_MAX) ? (count_seq + 1U) : 0U;
+    HDLC::transmitByte(DATA | count_seq);
+}
+
+void HDLC_1BTL::transmitByte(uint8_t data)
+{
+    HDLC::transmitByte(data);
+}
+
+void HDLC_1BTL::transmitEnd()
+{
+    HDLC::transmitEnd();
+}
+
 uint16_t HDLC_1BTL::receive()
 {
     uint16_t datalen = HDLC::receive();
