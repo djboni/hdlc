@@ -21,7 +21,8 @@
 
 static int16_t readByte(void)
 {
-    return Serial1_read();
+    int16_t data = Serial1_read();
+    return data;
 }
 
 static void writeByte(uint8_t data)
@@ -80,6 +81,59 @@ void HDLC::transmit(const void* vdata, uint16_t len) const
     transmitByte((crc >> 8U) & 0xFFU);
 
     writeByte('~');
+}
+
+uint16_t HDLC::receive()
+{
+    int16_t c = readByte();
+    if(c == -1)
+        return 0U;
+
+    if(status >= OK)
+        init();
+
+    uint16_t retv = 0U;
+
+    if(c == '~')
+    {
+        if(status == RECEIVING && len != 0U)
+        {
+            // TODO CRC
+            status = OK;
+
+            retv = len;
+        }
+        else
+        {
+            init();
+        }
+    }
+    else
+    {
+        if(status == ESCAPED)
+        {
+            status = RECEIVING;
+
+            c ^= 0x20U;
+            data[len] = c;
+            crc = crc_update(crc, c);
+
+            ++len;
+        }
+        else if(c != '}')
+        {
+            data[len] = c;
+            crc = crc_update(crc, c);
+
+            ++len;
+        }
+        else
+        {
+            status = ESCAPED;
+        }
+    }
+
+    return retv;
 }
 
 uint16_t HDLC::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
