@@ -1,0 +1,71 @@
+# [HDLC](https://github.com/djboni/hdlc)
+
+by [Djones A. Boni](https://twitter.com/djonesboni)
+
+
+HDLC stads for High-Level Data Link Control. This library adapts the HDLC
+protocol for standard serial, allowing easy communication with CRC error
+detection among microcontrollers connected via a serial bus.
+
+Implemented as a C++ class, the HDLC Data Link Layer can be extended using class
+inheritance. The library also provides an One Byte Transport Layer derived class
+as an extension example.
+
+You can use HDLC both for closed- and open-source projects. You are also
+free to keep changes to this library to yourself. However we'll enjoy your
+improvements and suggestions. `:-)`
+
+You are free to copy, modify, and distribute HDLC with attribution under
+the terms of the
+[Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+See the doc/LICENSE file for details.
+
+
+## Supported hardware
+
+The project has been developed and tested with AVR microcontroller family
+(ATmega 2560) using [Arduinutil](https://github.com/djboni/arduinutil) as
+development platform.
+
+However it should be very easy to port to another microcontroller family and
+development platform.
+
+
+## How to use HDLC
+
+* Create an HDLC object
+* Send data with HDLC
+* Receive data with HDLC
+
+```cpp
+#include "HDLC.h"
+HDLC hdlc;
+
+void hdlc_sendMsg() {
+  uint8_t msg[] = "Hello world!";
+  hdlc.transmitBlock(msg, sizeof(msg));
+}
+
+void hdlc_receiveMsg() {
+  while(hdlc.receive() == 0U) {}
+  uint8_t buff[hdlc.RXBFLEN];
+  uint16_t size = hdlc.copyReceivedMessage(buff);
+  Serial_print("Msg[%u]=%s\n", size, buff);
+}
+```
+
+
+## Contributing to HDLC
+
+If you have suggestions for improving HDLC, please
+[open an issue or pull request on GitHub](https://github.com/djboni/hdlc).
+
+
+## Important files
+
+[README.md](https://github.com/djboni/hdlc/blob/master/README.md)
+Fast introduction (this file).
+
+[doc/LICENCE](https://github.com/djboni/hdlc/blob/master/doc/LICENSE)
+Complete license text.
+
