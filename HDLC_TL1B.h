@@ -23,7 +23,7 @@ class HDLC_TL1B:
         private HDLC
 {
 public:
-    static const uint16_t RXBFLEN = HDLC::RXBFLEN;
+    static const uint16_t RXBFLEN = HDLC::RXBFLEN - 1U;
 
     HDLC_TL1B();
     void init();

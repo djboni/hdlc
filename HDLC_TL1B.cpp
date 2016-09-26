@@ -140,6 +140,6 @@ uint16_t HDLC_TL1B::receive()
 
 uint16_t HDLC_TL1B::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
 {
-    uint16_t datalen = HDLC::copyReceivedMessage(buff, 1U, RXBFLEN - 1U, true);
+    uint16_t datalen = HDLC::copyReceivedMessage(buff, 1U, RXBFLEN, true);
     return datalen;
 }
