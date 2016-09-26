@@ -158,9 +158,8 @@ uint16_t HDLC::receive()
 
 uint16_t HDLC::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
 {
-    memcpy(buff, data, len);
-
-    const uint16_t datalen = len;
+    const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
+    memcpy(buff, data, datalen);
     init();
     return datalen;
 }
@@ -168,12 +167,10 @@ uint16_t HDLC::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
 uint16_t HDLC::copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
         bool callinit)
 {
-    num = (pos + num) > len ? (len - pos) : num;
-
+    const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
+    num = (pos + num) > datalen ? (datalen - pos) : num;
     memcpy(buff, &data[pos], num);
-
     if(callinit)
         init();
-
     return num;
 }
