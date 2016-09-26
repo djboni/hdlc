@@ -135,16 +135,16 @@ uint16_t HDLC::receive()
             status = RECEIVING;
 
             c ^= 0x20U;
-            data[len] = c;
             crc = crc_update(crc, c);
-
+            if(len < RXBFLEN)
+                data[len] = c;
             ++len;
         }
         else if(c != '}')
         {
-            data[len] = c;
             crc = crc_update(crc, c);
-
+            if(len < RXBFLEN)
+                data[len] = c;
             ++len;
         }
         else
