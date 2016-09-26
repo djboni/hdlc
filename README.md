@@ -7,6 +7,10 @@ HDLC stads for High-Level Data Link Control. This library adapts the HDLC
 protocol for standard serial, allowing easy communication with CRC error
 detection among microcontrollers connected via a serial bus.
 
+For more information about HDLC and take a look at 
+[RFC-1662 - PPP in HDLC-like Framing](https://tools.ietf.org/html/rfc1662)
+or in the doc/rfc1662.txt file.
+
 Implemented as a C++ class, the HDLC Data Link Layer can be extended using class
 inheritance. The library also provides an One Byte Transport Layer derived class
 as an extension example.
