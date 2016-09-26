@@ -14,18 +14,18 @@
  limitations under the License.
  */
 
-#ifndef HDLC_1BTL_H_
-#define HDLC_1BTL_H_
+#ifndef HDLC_TL1B_H_
+#define HDLC_TL1B_H_
 
-#include "../2_DLL/HDLC.h"
+#include "HDLC.h"
 
-class HDLC_1BTL:
+class HDLC_TL1B:
         private HDLC
 {
 public:
     static const uint16_t RXBFLEN = HDLC::RXBFLEN;
 
-    HDLC_1BTL();
+    HDLC_TL1B();
     void init();
 
     void transmitReset();
@@ -46,4 +46,4 @@ private:
     uint8_t count_tx_noack;
 };
 
-#endif /* HDLC_1BTL_H_ */
+#endif /* HDLC_TL1B_H_ */

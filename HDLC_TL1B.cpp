@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#include "HDLC_1BTL.h"
+#include "HDLC_TL1B.h"
 #include <string.h>
 
 #include "Arduinutil.h"
@@ -29,19 +29,19 @@
 static const uint8_t SEQ_MAX = 62U;
 static const uint8_t NOACK_LIM = 5U;
 
-HDLC_1BTL::HDLC_1BTL()
+HDLC_TL1B::HDLC_TL1B()
 {
     init();
 }
 
-void HDLC_1BTL::init()
+void HDLC_TL1B::init()
 {
     HDLC::init();
     count_seq = SEQ_MAX;
     count_tx_noack = 0U;
 }
 
-void HDLC_1BTL::transmitReset()
+void HDLC_TL1B::transmitReset()
 {
     init();
     HDLC::transmitStart();
@@ -49,7 +49,7 @@ void HDLC_1BTL::transmitReset()
     HDLC::transmitEnd();
 }
 
-void HDLC_1BTL::transmitAck(uint8_t rxs)
+void HDLC_TL1B::transmitAck(uint8_t rxs)
 {
     rxs &= MASKINV;
     rxs |= ACK;
@@ -58,7 +58,7 @@ void HDLC_1BTL::transmitAck(uint8_t rxs)
     HDLC::transmitEnd();
 }
 
-void HDLC_1BTL::transmitNack(uint8_t rxs)
+void HDLC_TL1B::transmitNack(uint8_t rxs)
 {
     rxs &= MASKINV;
     rxs |= NACK;
@@ -67,7 +67,7 @@ void HDLC_1BTL::transmitNack(uint8_t rxs)
     HDLC::transmitEnd();
 }
 
-void HDLC_1BTL::transmitBlock(const void* vdata, uint16_t len)
+void HDLC_TL1B::transmitBlock(const void* vdata, uint16_t len)
 {
     const uint8_t* data = (const uint8_t*)vdata;
     transmitStart();
@@ -80,7 +80,7 @@ void HDLC_1BTL::transmitBlock(const void* vdata, uint16_t len)
     transmitEnd();
 }
 
-void HDLC_1BTL::transmitStart()
+void HDLC_TL1B::transmitStart()
 {
     if(++count_tx_noack >= NOACK_LIM)
         transmitReset();
@@ -90,17 +90,17 @@ void HDLC_1BTL::transmitStart()
     HDLC::transmitByte(DATA | count_seq);
 }
 
-void HDLC_1BTL::transmitByte(uint8_t data)
+void HDLC_TL1B::transmitByte(uint8_t data)
 {
     HDLC::transmitByte(data);
 }
 
-void HDLC_1BTL::transmitEnd()
+void HDLC_TL1B::transmitEnd()
 {
     HDLC::transmitEnd();
 }
 
-uint16_t HDLC_1BTL::receive()
+uint16_t HDLC_TL1B::receive()
 {
     uint16_t datalen = HDLC::receive();
     if(datalen != 0U)
@@ -133,7 +133,7 @@ uint16_t HDLC_1BTL::receive()
     return datalen;
 }
 
-uint16_t HDLC_1BTL::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
+uint16_t HDLC_TL1B::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
 {
     uint16_t datalen = HDLC::copyReceivedMessage(buff, 1U, RXBFLEN - 1U, true);
     return datalen;
