@@ -26,8 +26,13 @@
 #define NACK    0x80U
 #define DATA    0xC0U
 
-static const uint8_t SEQ_MAX = 62U;
-static const uint8_t NOACK_LIM = 5U;
+#ifndef HDLC_SEQ_MAX
+#define HDLC_SEQ_MAX    63U
+#endif
+
+#ifndef HDLC_NOACK_LIM
+#define HDLC_NOACK_LIM  5U
+#endif
 
 HDLC_TL1B::HDLC_TL1B()
 {
@@ -37,7 +42,7 @@ HDLC_TL1B::HDLC_TL1B()
 void HDLC_TL1B::init()
 {
     HDLC::init();
-    count_seq = SEQ_MAX;
+    count_seq = HDLC_SEQ_MAX;
     count_tx_noack = 0U;
 }
 
@@ -82,11 +87,11 @@ void HDLC_TL1B::transmitBlock(const void* vdata, uint16_t len)
 
 void HDLC_TL1B::transmitStart()
 {
-    if(++count_tx_noack >= NOACK_LIM)
+    if(++count_tx_noack >= HDLC_NOACK_LIM)
         transmitReset();
 
     HDLC::transmitStart();
-    count_seq = (count_seq < SEQ_MAX) ? (count_seq + 1U) : 0U;
+    count_seq = (count_seq < HDLC_SEQ_MAX) ? (count_seq + 1U) : 0U;
     HDLC::transmitByte(DATA | count_seq);
 }
 

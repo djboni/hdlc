@@ -17,11 +17,11 @@
 #ifndef HDLC_H_
 #define HDLC_H_
 
+#include <stdint.h>
+
 #ifndef HDLC_RXBFLEN
 #define HDLC_RXBFLEN 16U
 #endif
-
-#include <stdint.h>
 
 class HDLC
 {
