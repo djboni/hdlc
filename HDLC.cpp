@@ -25,29 +25,18 @@
 
 #include "Arduinutil.h"
 
-static int16_t readByte(void)
-{
-    int16_t data = Serial1_read();
-    return data;
-}
-
-static void writeByte(uint8_t data)
-{
-    Serial1_writeByte(data);
-}
-
 static void escapeAndWriteByte(uint8_t data)
 {
     if(     data == '~' ||
             data == '}' ||
             data == '\n')
     {
-        writeByte('}');
-        writeByte(data ^ 0x20U);
+        HDLC_writeByte('}');
+        HDLC_writeByte(data ^ 0x20U);
     }
     else
     {
-        writeByte(data);
+        HDLC_writeByte(data);
     }
 }
 
@@ -78,7 +67,7 @@ void HDLC::transmitBlock(const void* vdata, uint16_t len)
 
 void HDLC::transmitStart()
 {
-    writeByte('~');
+    HDLC_writeByte('~');
     txcrc = CRC_INIT;
 }
 
@@ -94,12 +83,12 @@ void HDLC::transmitEnd()
     escapeAndWriteByte(txcrc & 0xFFU);
     escapeAndWriteByte((txcrc >> 8U) & 0xFFU);
 
-    writeByte('~');
+    HDLC_writeByte('~');
 }
 
 uint16_t HDLC::receive()
 {
-    int16_t c = readByte();
+    int16_t c = HDLC_readByte();
     if(c == -1)
         return 0U;
 

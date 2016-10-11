@@ -57,4 +57,10 @@ private:
     uint8_t data[RXBFLEN];
 };
 
+/* Read byte from serial. Function defined by application. */
+int16_t HDLC_readByte(void);
+
+/* Write byte to serial. Function defined by application. */
+void HDLC_writeByte(uint8_t data);
+
 #endif /* HDLC_H_ */
