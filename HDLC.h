@@ -18,32 +18,157 @@
 #define HDLC_H_
 
 #include <stdint.h>
+#include <string.h>
 
-#ifndef HDLC_RXBFLEN
-#define HDLC_RXBFLEN 16U
-#endif
+#include <util/crc16.h>
+#define CRC_INIT              0xFFFFU
+#define CRC_FINALXOR          0xFFFFU
+#define CRC_GOOD              0xF0B8U
+#define crc_update(crc, data) _crc_ccitt_update(crc, data)
 
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
 class HDLC
 {
 public:
-    static const uint16_t RXBFLEN = HDLC_RXBFLEN;
+    static const uint16_t RXBFLEN = rxBuffLen;
 
-    HDLC();
-    void init();
+    HDLC() {
+        init();
+    }
 
-    void transmitBlock(const void* vdata, uint16_t len);
+    void init() {
+        len = 0U;
+        status = RECEIVING;
+        crc = CRC_INIT;
+    }
 
-    void transmitStart();
-    void transmitByte(uint8_t data);
-    void transmitBytes(const void* vdata, uint16_t len);
-    void transmitEnd();
+    void transmitBlock(const void* vdata, uint16_t len) {
+        transmitStart();
+        transmitBytes(vdata, len);
+        transmitEnd();
+    }
 
-    uint16_t receive();
-    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
+    void transmitStart() {
+        writeByte('~');
+        txcrc = CRC_INIT;
+    }
+
+    void transmitByte(uint8_t data) {
+        escapeAndWriteByte(data);
+        txcrc = crc_update(txcrc, data);
+    }
+
+    void transmitBytes(const void* vdata, uint16_t len) {
+        const uint8_t* data = (const uint8_t*)vdata;
+        while(len)
+        {
+            transmitByte(*data);
+            ++data;
+            --len;
+        }
+    }
+
+    void transmitEnd() {
+        txcrc ^= CRC_FINALXOR;
+        escapeAndWriteByte(txcrc & 0xFFU);
+        escapeAndWriteByte((txcrc >> 8U) & 0xFFU);
+
+        writeByte('~');
+    }
+
+    uint16_t receive() {
+        int16_t c = readByte();
+        if(c == -1)
+            return 0U;
+
+        if(status >= OK)
+            init();
+
+        uint16_t retv = 0U;
+
+        if(c == '~')
+        {
+            if(status == RECEIVING && len != 0U)
+            {
+                if(crc == CRC_GOOD)
+                {
+                    status = OK;
+                    len -= 2U;
+                    retv = len;
+                }
+                else
+                {
+                    status = CRCERR;
+                }
+            }
+            else
+            {
+                init();
+            }
+        }
+        else
+        {
+            if(status == ESCAPED)
+            {
+                status = RECEIVING;
+
+                c ^= 0x20U;
+                crc = crc_update(crc, c);
+                if(len < RXBFLEN)
+                    data[len] = c;
+                ++len;
+            }
+            else if(c != '}')
+            {
+                crc = crc_update(crc, c);
+                if(len < RXBFLEN)
+                    data[len] = c;
+                ++len;
+            }
+            else
+            {
+                status = ESCAPED;
+            }
+        }
+
+        return retv;
+    }
+
+    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]) {
+        const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
+        memcpy(buff, data, datalen);
+        init();
+        return datalen;
+    }
+
     uint16_t copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
-            bool callinit=false);
+            bool callinit=false) {
+        const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
+        num = (pos + num) > datalen ? (datalen - pos) : num;
+        memcpy(buff, &data[pos], num);
+        if(callinit)
+            init();
+        return num;
+    }
 
 private:
+
+    static void escapeAndWriteByte(uint8_t data)
+    {
+        if(     data == '~' ||
+                data == '}' ||
+                data == '\n')
+        {
+            writeByte('}');
+            writeByte(data ^ 0x20U);
+        }
+        else
+        {
+            writeByte(data);
+        }
+    }
+
     enum {
         ESCAPED   = -1,
         RECEIVING = 0,
@@ -58,11 +183,5 @@ private:
     uint16_t crc;
     uint8_t data[RXBFLEN];
 };
-
-/* Read byte from serial. Function defined by application. */
-int16_t HDLC_readByte(void);
-
-/* Write byte to serial. Function defined by application. */
-void HDLC_writeByte(uint8_t data);
 
 #endif /* HDLC_H_ */
