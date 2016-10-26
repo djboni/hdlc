@@ -33,129 +33,24 @@ class HDLC
 public:
     static const uint16_t RXBFLEN = rxBuffLen;
 
-    HDLC() {
-        init();
-    }
+    HDLC();
+    void init();
 
-    void init() {
-        len = 0U;
-        status = RECEIVING;
-        crc = CRC_INIT;
-    }
+    void transmitBlock(const void* vdata, uint16_t len);
 
-    void transmitBlock(const void* vdata, uint16_t len) {
-        transmitStart();
-        transmitBytes(vdata, len);
-        transmitEnd();
-    }
+    void transmitStart();
+    void transmitByte(uint8_t data);
+    void transmitBytes(const void* vdata, uint16_t len);
+    void transmitEnd();
 
-    void transmitStart() {
-        writeByte('~');
-        txcrc = CRC_INIT;
-    }
+    uint16_t receive();
 
-    void transmitByte(uint8_t data) {
-        escapeAndWriteByte(data);
-        txcrc = crc_update(txcrc, data);
-    }
-
-    void transmitBytes(const void* vdata, uint16_t len) {
-        const uint8_t* data = (const uint8_t*)vdata;
-        while(len)
-        {
-            transmitByte(*data);
-            ++data;
-            --len;
-        }
-    }
-
-    void transmitEnd() {
-        txcrc ^= CRC_FINALXOR;
-        escapeAndWriteByte(txcrc & 0xFFU);
-        escapeAndWriteByte((txcrc >> 8U) & 0xFFU);
-
-        writeByte('~');
-    }
-
-    uint16_t receive() {
-        int16_t c = readByte();
-        if(c == -1)
-            return 0U;
-
-        if(status >= OK)
-            init();
-
-        uint16_t retv = 0U;
-
-        if(c == '~')
-        {
-            if(status == RECEIVING && len != 0U)
-            {
-                if(crc == CRC_GOOD)
-                {
-                    status = OK;
-                    len -= 2U;
-                    retv = len;
-                }
-                else
-                {
-                    status = CRCERR;
-                }
-            }
-            else
-            {
-                init();
-            }
-        }
-        else
-        {
-            if(status == ESCAPED)
-            {
-                status = RECEIVING;
-
-                c ^= 0x20U;
-                crc = crc_update(crc, c);
-                if(len < RXBFLEN)
-                    data[len] = c;
-                ++len;
-            }
-            else if(c != '}')
-            {
-                crc = crc_update(crc, c);
-                if(len < RXBFLEN)
-                    data[len] = c;
-                ++len;
-            }
-            else
-            {
-                status = ESCAPED;
-            }
-        }
-
-        return retv;
-    }
-
-    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]) {
-        const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
-        memcpy(buff, data, datalen);
-        init();
-        return datalen;
-    }
-
+    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
     uint16_t copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
-            bool callinit=false) {
-        const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
-        num = (pos + num) > datalen ? (datalen - pos) : num;
-        memcpy(buff, &data[pos], num);
-        if(callinit)
-            init();
-        return num;
-    }
+            bool callinit=false);
 
 private:
-
-    static void escapeAndWriteByte(uint8_t data)
-    {
+    static void escapeAndWriteByte(uint8_t data) {
         if(     data == '~' ||
                 data == '}' ||
                 data == '\n')
@@ -183,5 +78,158 @@ private:
     uint16_t crc;
     uint8_t data[RXBFLEN];
 };
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+HDLC<readByte, writeByte, rxBuffLen>::HDLC()
+{
+    init();
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+void HDLC<readByte, writeByte, rxBuffLen>::init()
+{
+    len = 0U;
+    status = RECEIVING;
+    crc = CRC_INIT;
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+void HDLC<readByte, writeByte, rxBuffLen>::
+        transmitBlock(const void* vdata, uint16_t len)
+{
+    transmitStart();
+    transmitBytes(vdata, len);
+    transmitEnd();
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+void HDLC<readByte, writeByte, rxBuffLen>::transmitStart()
+{
+    writeByte('~');
+    txcrc = CRC_INIT;
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+void HDLC<readByte, writeByte, rxBuffLen>::transmitByte(uint8_t data)
+{
+    escapeAndWriteByte(data);
+    txcrc = crc_update(txcrc, data);
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+void HDLC<readByte, writeByte, rxBuffLen>::
+        transmitBytes(const void* vdata, uint16_t len)
+{
+    const uint8_t* data = (const uint8_t*)vdata;
+    while(len)
+    {
+        transmitByte(*data);
+        ++data;
+        --len;
+    }
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+void HDLC<readByte, writeByte, rxBuffLen>::transmitEnd()
+{
+    txcrc ^= CRC_FINALXOR;
+    escapeAndWriteByte(txcrc & 0xFFU);
+    escapeAndWriteByte((txcrc >> 8U) & 0xFFU);
+
+    writeByte('~');
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+uint16_t HDLC<readByte, writeByte, rxBuffLen>::receive()
+{
+    int16_t c = readByte();
+    if(c == -1)
+        return 0U;
+
+    if(status >= OK)
+        init();
+
+    uint16_t retv = 0U;
+
+    if(c == '~')
+    {
+        if(status == RECEIVING && len != 0U)
+        {
+            if(crc == CRC_GOOD)
+            {
+                status = OK;
+                len -= 2U;
+                retv = len;
+            }
+            else
+            {
+                status = CRCERR;
+            }
+        }
+        else
+        {
+            init();
+        }
+    }
+    else
+    {
+        if(status == ESCAPED)
+        {
+            status = RECEIVING;
+
+            c ^= 0x20U;
+            crc = crc_update(crc, c);
+            if(len < RXBFLEN)
+                data[len] = c;
+            ++len;
+        }
+        else if(c != '}')
+        {
+            crc = crc_update(crc, c);
+            if(len < RXBFLEN)
+                data[len] = c;
+            ++len;
+        }
+        else
+        {
+            status = ESCAPED;
+        }
+    }
+
+    return retv;
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+uint16_t HDLC<readByte, writeByte, rxBuffLen>::
+        copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
+{
+    const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
+    memcpy(buff, data, datalen);
+    init();
+    return datalen;
+}
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+uint16_t HDLC<readByte, writeByte, rxBuffLen>::
+        copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
+                bool callinit)
+{
+    const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
+    num = (pos + num) > datalen ? (datalen - pos) : num;
+    memcpy(buff, &data[pos], num);
+    if(callinit)
+        init();
+    return num;
+}
 
 #endif /* HDLC_H_ */
