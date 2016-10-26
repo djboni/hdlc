@@ -74,14 +74,8 @@ void HDLC_TL1B::transmitNack(uint8_t rxs)
 
 void HDLC_TL1B::transmitBlock(const void* vdata, uint16_t len)
 {
-    const uint8_t* data = (const uint8_t*)vdata;
     transmitStart();
-    while(len)
-    {
-        transmitByte(*data);
-        ++data;
-        --len;
-    }
+    transmitBytes(vdata, len);
     transmitEnd();
 }
 
@@ -98,6 +92,17 @@ void HDLC_TL1B::transmitStart()
 void HDLC_TL1B::transmitByte(uint8_t data)
 {
     HDLC::transmitByte(data);
+}
+
+void HDLC_TL1B::transmitBytes(const void* vdata, uint16_t len)
+{
+    const uint8_t* data = (const uint8_t*)vdata;
+    while(len)
+    {
+        transmitByte(*data);
+        ++data;
+        --len;
+    }
 }
 
 void HDLC_TL1B::transmitEnd()

@@ -31,8 +31,10 @@ public:
     void transmitReset();
 
     void transmitBlock(const void* vdata, uint16_t len);
+
     void transmitStart();
     void transmitByte(uint8_t data);
+    void transmitBytes(const void* vdata, uint16_t len);
     void transmitEnd();
 
     uint16_t receive();
