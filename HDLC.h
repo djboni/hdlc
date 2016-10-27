@@ -31,9 +31,9 @@ template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
 class HDLC
 {
 private:
-    static const uint8_t DATAINVBIT = 0x20U;
-    static const uint8_t DATASTART  = '~';
-    static const uint8_t DATAESCAPE = '}';
+    static const uint8_t DATAINVBIT;
+    static const uint8_t DATASTART;
+    static const uint8_t DATAESCAPE;
     static const uint8_t DATAESCAPELIST[];
 
 public:
@@ -85,10 +85,29 @@ private:
     uint8_t data[RXBFLEN];
 };
 
+
+
 template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
         uint16_t rxBuffLen>
 const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
-        DATAESCAPELIST[] = { DATASTART, DATAESCAPE, '\n' };
+        DATAINVBIT = 0x20U;
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
+        DATASTART  = '~';
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
+        DATAESCAPE = '}';
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
+        DATAESCAPELIST[] = { DATASTART, DATAESCAPE };
+
+
 
 template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
         uint16_t rxBuffLen>
