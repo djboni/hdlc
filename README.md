@@ -11,9 +11,9 @@ For more information about HDLC and take a look at
 [RFC-1662 - PPP in HDLC-like Framing](https://tools.ietf.org/html/rfc1662)
 or in the doc/rfc1662.txt file.
 
-Implemented as a C++ class, the HDLC Data Link Layer can be extended using class
-inheritance. The library also provides an One Byte Transport Layer derived class
-as an extension example.
+Implemented as a C++ class template, the HDLC Data Link Layer can be extended
+using class inheritance. The library also provides an One Byte Transport Layer
+derived class template as an extension example.
 
 You can use HDLC both for closed- and open-source projects. You are also
 free to keep changes to this library to yourself. However we'll enjoy your
@@ -43,18 +43,39 @@ development platform.
 
 ```cpp
 #include "HDLC.h"
-HDLC hdlc;
+#include "Arduinutil.h"
+
+HDLC<Serial1_read, Serial1_writeByte, 16> hdlc;
 
 void hdlc_sendMsg() {
-  uint8_t msg[] = "Hello world!";
-  hdlc.transmitBlock(msg, sizeof(msg));
+    uint8_t msg[] = "Hello world!";
+    hdlc.transmitBlock(msg, sizeof(msg));
 }
 
 void hdlc_receiveMsg() {
-  while(hdlc.receive() == 0U) {}
-  uint8_t buff[hdlc.RXBFLEN];
-  uint16_t size = hdlc.copyReceivedMessage(buff);
-  Serial_print("Msg[%u]=%s\n", size, buff);
+    if(hdlc.receive() != 0U)
+    {
+        uint8_t buff[hdlc.RXBFLEN];
+        uint16_t size = hdlc.copyReceivedMessage(buff);
+
+        Serial_print("Msg[%u]=%s\n", size, buff);
+    }
+}
+
+int main(void)
+{
+    init();
+    Serial_begin(115200, SERIAL_8N1);
+    Serial1_begin(19200, SERIAL_8N1);
+
+    Serial_print("Init\n");
+
+    hdlc_sendMsg();
+
+    for(;;)
+    {
+        hdlc_receiveMsg();
+    }
 }
 ```
 
