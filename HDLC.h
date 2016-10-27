@@ -30,6 +30,12 @@ template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
         uint16_t rxBuffLen>
 class HDLC
 {
+private:
+    static const uint8_t DATAINVBIT = 0x20U;
+    static const uint8_t DATASTART  = '~';
+    static const uint8_t DATAESCAPE = '}';
+    static const uint8_t DATAESCAPELIST[];
+
 public:
     static const uint16_t RXBFLEN = rxBuffLen;
 
@@ -51,17 +57,17 @@ public:
 
 private:
     static void escapeAndWriteByte(uint8_t data) {
-        if(     data == '~' ||
-                data == '}' ||
-                data == '\n')
+        const uint8_t n = sizeof(DATAESCAPELIST)/sizeof(DATAESCAPELIST[0]);
+        for(int8_t i = 0; i < n; ++i)
         {
-            writeByte('}');
-            writeByte(data ^ 0x20U);
+            if(data == DATAESCAPELIST[i])
+            {
+                writeByte(DATAESCAPE);
+                data ^= DATAINVBIT;
+                break;
+            }
         }
-        else
-        {
-            writeByte(data);
-        }
+        writeByte(data);
     }
 
     enum {
@@ -78,6 +84,11 @@ private:
     uint16_t crc;
     uint8_t data[RXBFLEN];
 };
+
+template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
+        uint16_t rxBuffLen>
+const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
+        DATAESCAPELIST[] = { DATASTART, DATAESCAPE, '\n' };
 
 template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
         uint16_t rxBuffLen>
@@ -109,7 +120,7 @@ template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
         uint16_t rxBuffLen>
 void HDLC<readByte, writeByte, rxBuffLen>::transmitStart()
 {
-    writeByte('~');
+    writeByte(DATASTART);
     txcrc = CRC_INIT;
 }
 
@@ -143,7 +154,7 @@ void HDLC<readByte, writeByte, rxBuffLen>::transmitEnd()
     escapeAndWriteByte(txcrc & 0xFFU);
     escapeAndWriteByte((txcrc >> 8U) & 0xFFU);
 
-    writeByte('~');
+    writeByte(DATASTART);
 }
 
 template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
@@ -159,7 +170,7 @@ uint16_t HDLC<readByte, writeByte, rxBuffLen>::receive()
 
     uint16_t retv = 0U;
 
-    if(c == '~')
+    if(c == DATASTART)
     {
         if(status == RECEIVING && len != 0U)
         {
@@ -185,13 +196,13 @@ uint16_t HDLC<readByte, writeByte, rxBuffLen>::receive()
         {
             status = RECEIVING;
 
-            c ^= 0x20U;
+            c ^= DATAINVBIT;
             crc = crc_update(crc, c);
             if(len < RXBFLEN)
                 data[len] = c;
             ++len;
         }
-        else if(c != '}')
+        else if(c != DATAESCAPE)
         {
             crc = crc_update(crc, c);
             if(len < RXBFLEN)
