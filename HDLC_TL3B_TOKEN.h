@@ -90,6 +90,7 @@ public:
     uint16_t getTxCount() const { return TxCount; }
     uint16_t getTokenSequence() const { return TokenSequence; }
     TokenState_t getTokenState() const { return TokenState; }
+    bool haveToken() const { return TokenState == TOKEN_HAVE; }
     uint8_t getTokenAddress() const { return TokenAddress; }
 
 private:
