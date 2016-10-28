@@ -51,9 +51,9 @@ public:
     };
 
     struct MessageHeader_t {
-        uint8_t to;
-        uint8_t from;
         Command_t command;
+        uint8_t from;
+        uint8_t to;
     };
 
     static const uint16_t RXBFLEN = rxBuffLen;
@@ -181,9 +181,9 @@ void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
     ++TxCount;
 
     HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitStart();
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(to_addr); /* To */
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(Address); /* From */
     HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(command); /* Command */
+    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(Address); /* From */
+    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(to_addr); /* To */
 }
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
@@ -300,7 +300,7 @@ typename HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::MessageHeader_t
 {
     uint8_t buff[3U];
     HDLC<readByte, writeByte, BASE_RXBFLEN>::copyReceivedMessage(&buff[0U], 0U, sizeof(buff), false);
-    MessageHeader_t header = { buff[0U], buff[1U], static_cast<Command_t>(buff[2U]) };
+    MessageHeader_t header = { static_cast<Command_t>(buff[0U]), buff[1U], buff[2U] };
     return header;
 }
 
