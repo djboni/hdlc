@@ -66,7 +66,7 @@ public:
     void transmitReset();
     void transmitGiveToken(uint8_t to_addr);
 private:
-    void transmitAckToken(uint8_t to_addr, uint16_t tokenSequence);
+    void transmitAckToken(uint8_t to_addr);
 
     void transmitStart(Command_t command, uint8_t to_addr);
 
@@ -88,7 +88,6 @@ public:
     uint8_t getAddress() const { return Address; }
     uint16_t getRxCount() const { return RxCount; }
     uint16_t getTxCount() const { return TxCount; }
-    uint16_t getTokenSequence() const { return TokenSequence; }
     TokenState_t getTokenState() const { return TokenState; }
     bool haveToken() const { return TokenState == TOKEN_HAVE; }
     uint8_t getTokenAddress() const { return TokenAddress; }
@@ -97,7 +96,6 @@ private:
     uint8_t Address;
     uint16_t RxCount;
     uint16_t TxCount;
-    uint16_t TokenSequence;
     TokenState_t TokenState;
     uint8_t TokenAddress;
 };
@@ -123,7 +121,6 @@ void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::init()
 
     RxCount = 0;
     TxCount = 0;
-    TokenSequence = 0;
     TokenState = master ? TOKEN_HAVE : TOKEN_DONT_HAVE;
     TokenAddress = 0;
 }
@@ -140,11 +137,7 @@ template<HDLC_TL3B_TOKEN_TEMPLATE>
 void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
         transmitGiveToken(uint8_t to_addr)
 {
-    if(master)
-        ++TokenSequence;
-
     transmitStart(CMD_GIVE_TOKEN, to_addr);
-    transmitBlock(&TokenSequence, sizeof(TokenSequence));
     transmitEnd();
 
     TokenAddress = to_addr;
@@ -153,10 +146,9 @@ void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
-        transmitAckToken(uint8_t to_addr, uint16_t tokenSequence)
+        transmitAckToken(uint8_t to_addr)
 {
     transmitStart(CMD_ACK_TOKEN, to_addr);
-    transmitBlock(&tokenSequence, sizeof(tokenSequence));
     transmitEnd();
 }
 
@@ -241,17 +233,8 @@ uint16_t HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::receive()
                     {
                         /* Do not accept a token given in a broadcast. */
                         TokenState = TOKEN_HAVE;
-
-                        uint16_t rxTokenSequence;
-                        copyMessageData((uint8_t*)&rxTokenSequence, 0U, sizeof(rxTokenSequence));
-                        transmitAckToken(header.from, rxTokenSequence);
-
+                        transmitAckToken(header.from);
                         TokenAddress = header.from;
-
-                        if(master)
-                            ++TokenSequence;
-                        else
-                            TokenSequence = rxTokenSequence;
                     }
                     else
                     {
