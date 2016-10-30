@@ -17,12 +17,37 @@
 #ifndef HDLC_TL1B_H_
 #define HDLC_TL1B_H_
 
+#define HDLC_TL1B_TEMPLATE                                                     \
+        int16_t (&readByte)(void),                                             \
+        void (&writeByte)(uint8_t data),                                       \
+        uint16_t rxBuffLen,                                                    \
+        uint8_t seqMax,                                                        \
+        uint8_t noAckLim
+
+#define HDLC_TL1B_TEMPLATEDEFAULT                                              \
+        int16_t (&readByte)(void),                                             \
+        void (&writeByte)(uint8_t data),                                       \
+        uint16_t rxBuffLen,                                                    \
+        uint8_t seqMax = 63U,                                                  \
+        uint8_t noAckLim = 5U
+
+#define HDLC_TL1B_TEMPLATETYPE                                                 \
+        readByte,                                                              \
+        writeByte,                                                             \
+        rxBuffLen,                                                             \
+        seqMax,                                                                \
+        noAckLim
+
+#define HDLC_TL1B_BASE_TEMPLATETYPE                                            \
+        readByte,                                                              \
+        writeByte,                                                             \
+        rxBuffLen + 1U
+
 #include "HDLC.h"
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax = 63U, uint8_t noAckLim = 5U>
+template<HDLC_TL1B_TEMPLATEDEFAULT>
 class HDLC_TL1B:
-        private HDLC<readByte, writeByte, rxBuffLen + 1U>
+        private HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>
 {
 private:
     static const uint8_t MASK    = 0xC0U;
@@ -34,7 +59,6 @@ private:
 
 public:
     static const uint16_t RXBFLEN = rxBuffLen;
-    static const uint16_t BASE_RXBFLEN = rxBuffLen + 1U;
 
     HDLC_TL1B();
     void init();
@@ -59,36 +83,32 @@ private:
     uint8_t count_tx_noack;
 };
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::HDLC_TL1B()
+template<HDLC_TL1B_TEMPLATE>
+HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::HDLC_TL1B()
 {
     init();
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::init()
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::init()
 {
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::init();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::init();
     count_seq = seqMax;
     count_tx_noack = 0U;
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         transmitReset()
 {
     init();
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitStart();
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(RESET);
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitEnd();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitStart();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitByte(RESET);
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitEnd();
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         transmitBlock(const void* vdata, uint16_t len)
 {
     transmitStart();
@@ -96,30 +116,27 @@ void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
     transmitEnd();
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         transmitStart()
 {
     if(++count_tx_noack >= noAckLim)
         transmitReset();
 
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitStart();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitStart();
     count_seq = (count_seq < seqMax) ? (count_seq + 1U) : 0U;
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(DATA | count_seq);
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitByte(DATA | count_seq);
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         transmitByte(uint8_t data)
 {
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(data);
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitByte(data);
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         transmitBytes(const void* vdata, uint16_t len)
 {
     const uint8_t* data = (const uint8_t*)vdata;
@@ -131,24 +148,22 @@ void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
     }
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::transmitEnd()
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::transmitEnd()
 {
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitEnd();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitEnd();
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-uint16_t HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::receive()
+template<HDLC_TL1B_TEMPLATE>
+uint16_t HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::receive()
 {
-    uint16_t datalen = HDLC<readByte, writeByte, BASE_RXBFLEN>::receive();
+    uint16_t datalen = HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::receive();
     if(datalen != 0U)
     {
         datalen -= 1U;
 
         uint8_t frameseq;
-        HDLC<readByte, writeByte, BASE_RXBFLEN>::copyReceivedMessage(&frameseq, 0U, 1U);
+        HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::copyReceivedMessage(&frameseq, 0U, 1U);
 
         uint8_t frame = frameseq & MASK;
         uint8_t rxs = frameseq & MASKINV;
@@ -173,38 +188,35 @@ uint16_t HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::receive()
     return datalen;
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-uint16_t HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+uint16_t HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
 {
-    uint16_t datalen = HDLC<readByte, writeByte, BASE_RXBFLEN>::
+    uint16_t datalen = HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::
             copyReceivedMessage(buff, 1U, RXBFLEN, true);
     return datalen;
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         transmitAck(uint8_t rxs)
 {
     rxs &= MASKINV;
     rxs |= ACK;
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitStart();
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(rxs);
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitEnd();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitStart();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitByte(rxs);
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitEnd();
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen, uint8_t seqMax, uint8_t noAckLim>
-void HDLC_TL1B<readByte, writeByte, rxBuffLen, seqMax, noAckLim>::
+template<HDLC_TL1B_TEMPLATE>
+void HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
         transmitNack(uint8_t rxs)
 {
     rxs &= MASKINV;
     rxs |= NACK;
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitStart();
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(rxs);
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitEnd();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitStart();
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitByte(rxs);
+    HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::transmitEnd();
 }
 
 #endif /* HDLC_TL1B_H_ */

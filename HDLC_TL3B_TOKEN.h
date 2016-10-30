@@ -29,9 +29,14 @@
         writeByte,                                                             \
         rxBuffLen
 
+#define HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE                                      \
+        readByte,                                                              \
+        writeByte,                                                             \
+        rxBuffLen + 3U
+
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 class HDLC_TL3B_TOKEN:
-        private HDLC<readByte, writeByte, rxBuffLen + 3U>
+        private HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>
 {
 public:
     enum Command_t {
@@ -55,7 +60,6 @@ public:
     };
 
     static const uint16_t RXBFLEN = rxBuffLen;
-    static const uint16_t BASE_RXBFLEN = rxBuffLen + 3U;
 
     HDLC_TL3B_TOKEN(uint8_t address, bool master = false);
 
@@ -154,16 +158,16 @@ void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
 {
     ++TxCount;
 
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitStart();
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(command); /* Command */
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(Address); /* From */
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(to_addr); /* To */
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::transmitStart();
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::transmitByte(command); /* Command */
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::transmitByte(Address); /* From */
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::transmitByte(to_addr); /* To */
 }
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::transmitByte(uint8_t data)
 {
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitByte(data);
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::transmitByte(data);
 }
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
@@ -182,13 +186,13 @@ void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::transmitEnd()
 {
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::transmitEnd();
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::transmitEnd();
 }
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 uint16_t HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::receive()
 {
-    uint16_t datalen = HDLC<readByte, writeByte, BASE_RXBFLEN>::receive();
+    uint16_t datalen = HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::receive();
 
     if(datalen >= 3U)
     {
@@ -264,7 +268,7 @@ typename HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::MessageHeader_t
         copyMessageHeader()
 {
     uint8_t buff[3U];
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::copyReceivedMessage(&buff[0U], 0U, sizeof(buff), false);
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::copyReceivedMessage(&buff[0U], 0U, sizeof(buff), false);
     MessageHeader_t header = { static_cast<Command_t>(buff[0U]), buff[1U], buff[2U] };
     return header;
 }
@@ -273,7 +277,7 @@ template<HDLC_TL3B_TOKEN_TEMPLATE>
 uint16_t HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
         copyMessageData(uint8_t *buff, uint16_t pos, uint16_t num)
 {
-    uint16_t datalen = HDLC<readByte, writeByte, BASE_RXBFLEN>::
+    uint16_t datalen = HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::
             copyReceivedMessage(buff, pos + 3U, num, false);
     return datalen;
 }
@@ -282,7 +286,7 @@ template<HDLC_TL3B_TOKEN_TEMPLATE>
 uint16_t HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
         copyMessageData(uint8_t (&buff)[RXBFLEN])
 {
-    uint16_t datalen = HDLC<readByte, writeByte, BASE_RXBFLEN>::
+    uint16_t datalen = HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::
             copyReceivedMessage(buff, 3U, RXBFLEN, true);
     return datalen;
 }

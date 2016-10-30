@@ -26,8 +26,17 @@
 #define CRC_GOOD              0xF0B8U
 #define crc_update(crc, data) _crc_ccitt_update(crc, data)
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
+#define HDLC_TEMPLATE                                                          \
+        int16_t (&readByte)(void),                                             \
+        void (&writeByte)(uint8_t data),                                       \
+        uint16_t rxBuffLen
+
+#define HDLC_TEMPLATETYPE                                                      \
+        readByte,                                                              \
+        writeByte,                                                             \
+        rxBuffLen
+
+template<HDLC_TEMPLATE>
 class HDLC
 {
 private:
@@ -87,47 +96,37 @@ private:
 
 
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
-        DATAINVBIT = 0x20U;
+template<HDLC_TEMPLATE>
+const uint8_t HDLC<HDLC_TEMPLATETYPE>::DATAINVBIT = 0x20U;
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
-        DATASTART  = '~';
+template<HDLC_TEMPLATE>
+const uint8_t HDLC<HDLC_TEMPLATETYPE>::DATASTART  = '~';
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
-        DATAESCAPE = '}';
+template<HDLC_TEMPLATE>
+const uint8_t HDLC<HDLC_TEMPLATETYPE>::DATAESCAPE = '}';
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-const uint8_t HDLC<readByte, writeByte, rxBuffLen>::
-        DATAESCAPELIST[] = { DATASTART, DATAESCAPE };
+template<HDLC_TEMPLATE>
+const uint8_t HDLC<HDLC_TEMPLATETYPE>::DATAESCAPELIST[] =
+        { DATASTART, DATAESCAPE };
 
 
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-HDLC<readByte, writeByte, rxBuffLen>::HDLC()
+template<HDLC_TEMPLATE>
+HDLC<HDLC_TEMPLATETYPE>::HDLC()
 {
     init();
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-void HDLC<readByte, writeByte, rxBuffLen>::init()
+template<HDLC_TEMPLATE>
+void HDLC<HDLC_TEMPLATETYPE>::init()
 {
     len = 0U;
     status = RECEIVING;
     crc = CRC_INIT;
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-void HDLC<readByte, writeByte, rxBuffLen>::
+template<HDLC_TEMPLATE>
+void HDLC<HDLC_TEMPLATETYPE>::
         transmitBlock(const void* vdata, uint16_t len)
 {
     transmitStart();
@@ -135,25 +134,22 @@ void HDLC<readByte, writeByte, rxBuffLen>::
     transmitEnd();
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-void HDLC<readByte, writeByte, rxBuffLen>::transmitStart()
+template<HDLC_TEMPLATE>
+void HDLC<HDLC_TEMPLATETYPE>::transmitStart()
 {
     writeByte(DATASTART);
     txcrc = CRC_INIT;
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-void HDLC<readByte, writeByte, rxBuffLen>::transmitByte(uint8_t data)
+template<HDLC_TEMPLATE>
+void HDLC<HDLC_TEMPLATETYPE>::transmitByte(uint8_t data)
 {
     escapeAndWriteByte(data);
     txcrc = crc_update(txcrc, data);
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-void HDLC<readByte, writeByte, rxBuffLen>::
+template<HDLC_TEMPLATE>
+void HDLC<HDLC_TEMPLATETYPE>::
         transmitBytes(const void* vdata, uint16_t len)
 {
     const uint8_t* data = (const uint8_t*)vdata;
@@ -165,9 +161,8 @@ void HDLC<readByte, writeByte, rxBuffLen>::
     }
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-void HDLC<readByte, writeByte, rxBuffLen>::transmitEnd()
+template<HDLC_TEMPLATE>
+void HDLC<HDLC_TEMPLATETYPE>::transmitEnd()
 {
     txcrc ^= CRC_FINALXOR;
     escapeAndWriteByte(txcrc & 0xFFU);
@@ -176,9 +171,8 @@ void HDLC<readByte, writeByte, rxBuffLen>::transmitEnd()
     writeByte(DATASTART);
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-uint16_t HDLC<readByte, writeByte, rxBuffLen>::receive()
+template<HDLC_TEMPLATE>
+uint16_t HDLC<HDLC_TEMPLATETYPE>::receive()
 {
     int16_t c = readByte();
     if(c == -1)
@@ -237,10 +231,8 @@ uint16_t HDLC<readByte, writeByte, rxBuffLen>::receive()
     return retv;
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-uint16_t HDLC<readByte, writeByte, rxBuffLen>::
-        copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
+template<HDLC_TEMPLATE>
+uint16_t HDLC<HDLC_TEMPLATETYPE>::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
 {
     const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
     memcpy(buff, data, datalen);
@@ -248,9 +240,8 @@ uint16_t HDLC<readByte, writeByte, rxBuffLen>::
     return datalen;
 }
 
-template<int16_t (&readByte)(void), void (&writeByte)(uint8_t data),
-        uint16_t rxBuffLen>
-uint16_t HDLC<readByte, writeByte, rxBuffLen>::
+template<HDLC_TEMPLATE>
+uint16_t HDLC<HDLC_TEMPLATETYPE>::
         copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
                 bool callinit)
 {
