@@ -56,9 +56,8 @@ public:
 
     uint16_t receive();
 
-    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
-    uint16_t copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
-            bool callinit=false);
+    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]) const;
+    uint16_t copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num) const;
 
 private:
     static void escapeAndWriteByte(uint8_t data) {
@@ -227,24 +226,20 @@ uint16_t HDLC<HDLC_TEMPLATETYPE>::receive()
 }
 
 template<HDLC_TEMPLATE>
-uint16_t HDLC<HDLC_TEMPLATETYPE>::copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
+uint16_t HDLC<HDLC_TEMPLATETYPE>::copyReceivedMessage(uint8_t (&buff)[RXBFLEN]) const
 {
     const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
     memcpy(buff, data, datalen);
-    init();
     return datalen;
 }
 
 template<HDLC_TEMPLATE>
 uint16_t HDLC<HDLC_TEMPLATETYPE>::
-        copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num,
-                bool callinit)
+        copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num) const
 {
     const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
     num = (pos + num) > datalen ? (datalen - pos) : num;
     memcpy(buff, &data[pos], num);
-    if(callinit)
-        init();
     return num;
 }
 

@@ -77,7 +77,7 @@ public:
 
     uint16_t receive();
 
-    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]);
+    uint16_t copyReceivedMessage(uint8_t (&buff)[RXBFLEN]) const;
 
 private:
     void transmitAck(uint8_t rxs);
@@ -194,10 +194,10 @@ uint16_t HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::receive()
 
 template<HDLC_TL1B_TEMPLATE>
 uint16_t HDLC_TL1B<HDLC_TL1B_TEMPLATETYPE>::
-        copyReceivedMessage(uint8_t (&buff)[RXBFLEN])
+        copyReceivedMessage(uint8_t (&buff)[RXBFLEN]) const
 {
     uint16_t datalen = HDLC<HDLC_TL1B_BASE_TEMPLATETYPE>::
-            copyReceivedMessage(buff, 1U, RXBFLEN, true);
+            copyReceivedMessage(buff, 1U, RXBFLEN);
     return datalen;
 }
 

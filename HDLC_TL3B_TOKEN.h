@@ -84,8 +84,8 @@ public:
     uint16_t receive();
 
     MessageHeader_t copyMessageHeader();
-    uint16_t copyMessageData(uint8_t *buff, uint16_t pos, uint16_t num);
-    uint16_t copyMessageData(uint8_t (&buff)[RXBFLEN]);
+    uint16_t copyMessageData(uint8_t *buff, uint16_t pos, uint16_t num) const;
+    uint16_t copyMessageData(uint8_t (&buff)[RXBFLEN]) const;
 
     void setAddress(uint8_t address) { Address = address; }
     uint8_t getAddress() const { return Address; }
@@ -271,26 +271,26 @@ typename HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::MessageHeader_t
         copyMessageHeader()
 {
     uint8_t buff[3U];
-    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::copyReceivedMessage(&buff[0U], 0U, sizeof(buff), false);
+    HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::copyReceivedMessage(&buff[0U], 0U, sizeof(buff));
     MessageHeader_t header = { static_cast<Command_t>(buff[0U]), buff[1U], buff[2U] };
     return header;
 }
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 uint16_t HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
-        copyMessageData(uint8_t *buff, uint16_t pos, uint16_t num)
+        copyMessageData(uint8_t *buff, uint16_t pos, uint16_t num) const
 {
     uint16_t datalen = HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::
-            copyReceivedMessage(buff, pos + 3U, num, false);
+            copyReceivedMessage(buff, pos + 3U, num);
     return datalen;
 }
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 uint16_t HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
-        copyMessageData(uint8_t (&buff)[RXBFLEN])
+        copyMessageData(uint8_t (&buff)[RXBFLEN]) const
 {
     uint16_t datalen = HDLC<HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE>::
-            copyReceivedMessage(buff, 3U, RXBFLEN, true);
+            copyReceivedMessage(buff, 3U, RXBFLEN);
     return datalen;
 }
 
