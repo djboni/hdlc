@@ -185,7 +185,7 @@ uint16_t HDLC<HDLC_TEMPLATETYPE>::receive()
             if(crc.good())
             {
                 status = OK;
-                len -= 2U;
+                len -= crc.size;
                 retv = len;
             }
             else
