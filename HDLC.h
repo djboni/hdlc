@@ -161,9 +161,8 @@ template<HDLC_TEMPLATE>
 void HDLC<HDLC_TEMPLATETYPE>::transmitEnd()
 {
     txcrc.final();
-    escapeAndWriteByte(txcrc[0]);
-    escapeAndWriteByte(txcrc[1]);
-
+    for(int8_t i = 0; i < txcrc.size; ++i)
+        escapeAndWriteByte(txcrc[i]);
     writeByte(DATASTART);
 }
 
