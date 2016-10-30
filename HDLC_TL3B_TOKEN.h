@@ -22,14 +22,12 @@
 #define HDLC_TL3B_TOKEN_TEMPLATE                                               \
         int16_t (&readByte)(void),                                             \
         void (&writeByte)(uint8_t data),                                       \
-        uint16_t rxBuffLen,                                                    \
-        bool master
+        uint16_t rxBuffLen
 
 #define HDLC_TL3B_TOKEN_TEMPLATETYPE                                           \
         readByte,                                                              \
         writeByte,                                                             \
-        rxBuffLen,                                                             \
-        master
+        rxBuffLen
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 class HDLC_TL3B_TOKEN:
@@ -59,9 +57,7 @@ public:
     static const uint16_t RXBFLEN = rxBuffLen;
     static const uint16_t BASE_RXBFLEN = rxBuffLen + 3U;
 
-    HDLC_TL3B_TOKEN();
-    HDLC_TL3B_TOKEN(uint8_t address);
-    void init();
+    HDLC_TL3B_TOKEN(uint8_t address, bool master = false);
 
     void transmitReset();
     void transmitGiveToken(uint8_t to_addr);
@@ -101,24 +97,10 @@ private:
 };
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
-HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::HDLC_TL3B_TOKEN()
+HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::
+        HDLC_TL3B_TOKEN(uint8_t address, bool master)
 {
-    init();
-    setAddress(0);
-}
-
-template<HDLC_TL3B_TOKEN_TEMPLATE>
-HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::HDLC_TL3B_TOKEN(uint8_t address)
-{
-    init();
     setAddress(address);
-}
-
-template<HDLC_TL3B_TOKEN_TEMPLATE>
-void HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::init()
-{
-    HDLC<readByte, writeByte, BASE_RXBFLEN>::init();
-
     RxCount = 0;
     TxCount = 0;
     TokenState = master ? TOKEN_HAVE : TOKEN_DONT_HAVE;
