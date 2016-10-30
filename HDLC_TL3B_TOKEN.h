@@ -22,17 +22,20 @@
 #define HDLC_TL3B_TOKEN_TEMPLATE                                               \
         int16_t (&readByte)(void),                                             \
         void (&writeByte)(uint8_t data),                                       \
-        uint16_t rxBuffLen
+        uint16_t rxBuffLen,                                                    \
+        class CRC
 
 #define HDLC_TL3B_TOKEN_TEMPLATETYPE                                           \
         readByte,                                                              \
         writeByte,                                                             \
-        rxBuffLen
+        rxBuffLen,                                                             \
+        CRC
 
 #define HDLC_TL3B_TOKEN_BASE_TEMPLATETYPE                                      \
         readByte,                                                              \
         writeByte,                                                             \
-        rxBuffLen + 3U
+        rxBuffLen,                                                             \
+        CRC
 
 template<HDLC_TL3B_TOKEN_TEMPLATE>
 class HDLC_TL3B_TOKEN:

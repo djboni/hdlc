@@ -21,6 +21,7 @@
         int16_t (&readByte)(void),                                             \
         void (&writeByte)(uint8_t data),                                       \
         uint16_t rxBuffLen,                                                    \
+        class CRC,                                                             \
         uint8_t seqMax,                                                        \
         uint8_t noAckLim
 
@@ -28,6 +29,7 @@
         int16_t (&readByte)(void),                                             \
         void (&writeByte)(uint8_t data),                                       \
         uint16_t rxBuffLen,                                                    \
+        class CRC,                                                             \
         uint8_t seqMax = 63U,                                                  \
         uint8_t noAckLim = 5U
 
@@ -35,13 +37,15 @@
         readByte,                                                              \
         writeByte,                                                             \
         rxBuffLen,                                                             \
+        CRC,                                                                   \
         seqMax,                                                                \
         noAckLim
 
 #define HDLC_TL1B_BASE_TEMPLATETYPE                                            \
         readByte,                                                              \
         writeByte,                                                             \
-        rxBuffLen + 1U
+        rxBuffLen + 1U,                                                        \
+        CRC
 
 #include "HDLC.h"
 

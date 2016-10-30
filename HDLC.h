@@ -20,21 +20,17 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <util/crc16.h>
-#define CRC_INIT              0xFFFFU
-#define CRC_FINALXOR          0xFFFFU
-#define CRC_GOOD              0xF0B8U
-#define crc_update(crc, data) _crc_ccitt_update(crc, data)
-
 #define HDLC_TEMPLATE                                                          \
         int16_t (&readByte)(void),                                             \
         void (&writeByte)(uint8_t data),                                       \
-        uint16_t rxBuffLen
+        uint16_t rxBuffLen,                                                    \
+        class CRC
 
 #define HDLC_TEMPLATETYPE                                                      \
         readByte,                                                              \
         writeByte,                                                             \
-        rxBuffLen
+        rxBuffLen,                                                             \
+        CRC
 
 template<HDLC_TEMPLATE>
 class HDLC
@@ -86,11 +82,11 @@ private:
         CRCERR    = 2
     };
 
-    uint16_t txcrc;
+    CRC txcrc;
 
     int8_t status;
     uint16_t len;
-    uint16_t crc;
+    CRC crc;
     uint8_t data[RXBFLEN];
 };
 
@@ -122,7 +118,7 @@ void HDLC<HDLC_TEMPLATETYPE>::init()
 {
     len = 0U;
     status = RECEIVING;
-    crc = CRC_INIT;
+    crc.init();
 }
 
 template<HDLC_TEMPLATE>
@@ -138,14 +134,14 @@ template<HDLC_TEMPLATE>
 void HDLC<HDLC_TEMPLATETYPE>::transmitStart()
 {
     writeByte(DATASTART);
-    txcrc = CRC_INIT;
+    txcrc.init();
 }
 
 template<HDLC_TEMPLATE>
 void HDLC<HDLC_TEMPLATETYPE>::transmitByte(uint8_t data)
 {
     escapeAndWriteByte(data);
-    txcrc = crc_update(txcrc, data);
+    txcrc.update(data);
 }
 
 template<HDLC_TEMPLATE>
@@ -164,9 +160,9 @@ void HDLC<HDLC_TEMPLATETYPE>::
 template<HDLC_TEMPLATE>
 void HDLC<HDLC_TEMPLATETYPE>::transmitEnd()
 {
-    txcrc ^= CRC_FINALXOR;
-    escapeAndWriteByte(txcrc & 0xFFU);
-    escapeAndWriteByte((txcrc >> 8U) & 0xFFU);
+    txcrc.final();
+    escapeAndWriteByte(txcrc[0]);
+    escapeAndWriteByte(txcrc[1]);
 
     writeByte(DATASTART);
 }
@@ -187,7 +183,7 @@ uint16_t HDLC<HDLC_TEMPLATETYPE>::receive()
     {
         if(status == RECEIVING && len != 0U)
         {
-            if(crc == CRC_GOOD)
+            if(crc.good())
             {
                 status = OK;
                 len -= 2U;
@@ -210,14 +206,14 @@ uint16_t HDLC<HDLC_TEMPLATETYPE>::receive()
             status = RECEIVING;
 
             c ^= DATAINVBIT;
-            crc = crc_update(crc, c);
+            crc.update(c);
             if(len < RXBFLEN)
                 data[len] = c;
             ++len;
         }
         else if(c != DATAESCAPE)
         {
-            crc = crc_update(crc, c);
+            crc.update(c);
             if(len < RXBFLEN)
                 data[len] = c;
             ++len;
