@@ -61,6 +61,9 @@ class HDLC:
 
     def receive(self):
         c = self.readByte()
+        if type(c) == bytes:
+            c = chr(int.from_bytes(c, 'little', signed=False))
+
         if c == '':
             return 0
 

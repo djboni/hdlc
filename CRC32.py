@@ -83,6 +83,8 @@ class CRC32:
     def update(self, data):
         if type(data) == str:
             data = ord(data)
+        elif type(data) == bytes:
+            data = int.from_bytes(data, 'little', signed=False)
         self.crc = (self.crc >> 8) ^ self.CRC_TAB[(self.crc ^ data) & 0xFF]
 
     def good(self):
