@@ -254,6 +254,7 @@ uint16_t HDLC_TL3B_TOKEN<HDLC_TL3B_TOKEN_TEMPLATETYPE>::receive()
         else
         {
             /* Message not for me. */
+            datalen = 0U;
         }
     }
     else
