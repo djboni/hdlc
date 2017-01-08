@@ -238,8 +238,15 @@ uint16_t HDLC<HDLC_TEMPLATETYPE>::
         copyReceivedMessage(uint8_t *buff, uint16_t pos, uint16_t num) const
 {
     const uint16_t datalen = (len > RXBFLEN) ? RXBFLEN : len;
-    num = (pos + num) > datalen ? (datalen - pos) : num;
-    memcpy(buff, &data[pos], num);
+    if(pos < RXBFLEN)
+    {
+        num = (pos + num) > datalen ? (datalen - pos) : num;
+        memcpy(buff, &data[pos], num);
+    }
+    else
+    {
+        num = 0;
+    }
     return num;
 }
 
